@@ -11,16 +11,13 @@ from ruuvitag_sensor.ruuvi import RuuviTagSensor
 
 CONFIG_FILE = Path(__file__).parent / "ruuvitags-mqtt.cfg"
 SENSORS = {
-    "temperature": ("Temperature", "°C", "temperature"),
-    "humidity": ("Humidity", "%", "humidity"),
-    "pressure": ("Pressure", "hPa", "atmospheric_pressure"),
-    "battery": ("Battery Voltage", "mV", "voltage"),
-    "rssi": ("RSSI", "dBm", "signal_strength"),
+    # key: (name, unit, device_class, entity_category, icon, value_template, suggested_display_precision)
+    "temperature": ("Temperature", "°C", "temperature", None, None, "value_json.temperature", None),
+    "humidity": ("Humidity", "%", "humidity", None, None, "value_json.humidity", None),
+    "pressure": ("Pressure", "hPa", "atmospheric_pressure", None, "mdi:gauge", "value_json.pressure", None),
+    "battery": ("Battery Voltage", "V", "voltage", None, "mdi:current-dc", "(value_json.battery | float / 1000) | round(3)", 3),
+    "rssi": ("RSSI", "dBm", "signal_strength", "diagnostic", None, "value_json.rssi", None),
 }
-DIAGNOSTIC_SENSORS = (
-    # These will set entity_category to diagnostic
-    "rssi",
-)
 UPDATE_INTERVAL = 60
 
 discovered_sensors = set()
@@ -32,18 +29,21 @@ logger = logging.getLogger()
 def publish_discovery(sensor_id: str, mqtt_client: mqtt.Client) -> None:
     device_id = f"ruuvi_{sensor_id}"
     components = {}
-    for key, (name, unit, device_class) in SENSORS.items():
-        components[key] = {
+    for key, (name, unit, device_class, entity_category, icon, value_template, precision) in SENSORS.items():
+        item = {
             "platform": "sensor",
             "name": name,
             "unique_id": f"{device_id}_{key}",
             "device_class": device_class,
             "state_class": "measurement",
             "unit_of_measurement": unit,
-            "value_template": "{{ value_json." + key + " }}",
+            "entity_category": entity_category,
+            "value_template": "{{ " + value_template + " }}",
+            "suggested_display_precision": precision,
+            "icon": icon,
         }
-        if key in DIAGNOSTIC_SENSORS:
-            components[key]["entity_category"] = "diagnostic"
+        # Save only fields with non-None values
+        components[key] = {k: v for k, v in item.items() if v is not None}
     config = {
         "device": {
             "identifiers": [device_id],
