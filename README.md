@@ -8,7 +8,7 @@ Replace `markku:markku` with your current unprivileged username and group:
     sudo mkdir /opt/ruuvitags-mqtt
     sudo chown markku:markku /opt/ruuvitags-mqtt
     cd /opt/ruuvitags-mqtt
-    git clone https://github.com/markkuleinio/zabbix-ruuvitags.git .
+    git clone https://github.com/markkuleinio/ruuvitags-mqtt.git .
     python3 -m venv venv
     venv/bin/pip install -U pip wheel
     venv/bin/pip install paho-mqtt ruuvitag-sensor
