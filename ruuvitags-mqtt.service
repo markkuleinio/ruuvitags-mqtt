@@ -1,0 +1,11 @@
+[Unit]
+Description=RuuviTags to MQTT
+
+[Service]
+Type=simple
+User=ruuvitag
+WorkingDirectory=/opt/ruuvitags-mqtt
+ExecStart=/opt/ruuvitags-mqtt/venv/bin/python ruuvitags-mqtt.py
+
+[Install]
+WantedBy=multi-user.target
