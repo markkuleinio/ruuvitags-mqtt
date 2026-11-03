@@ -23,7 +23,7 @@ UPDATE_INTERVAL = 60
 discovered_sensors = set()
 last_updated = {}
 
-logger = logging.getLogger()
+logger = logging.getLogger("ruuvitags-mqtt")
 
 
 def publish_discovery(sensor_id: str, mqtt_client: mqtt.Client) -> None:
@@ -59,7 +59,7 @@ def publish_discovery(sensor_id: str, mqtt_client: mqtt.Client) -> None:
         "components": components,
     }
     topic = f"homeassistant/device/{device_id}/config"
-    logger.info(f"Publishing: {topic}")
+    logger.info("Publishing: %s", topic)
     mqtt_client.publish(
         topic,
         json.dumps(config),
@@ -70,7 +70,7 @@ def publish_discovery(sensor_id: str, mqtt_client: mqtt.Client) -> None:
 
 def publish_data(sensor_id: str, data: dict, mqtt_client: mqtt.Client) -> None:
     topic = f"ruuvi/{sensor_id}/state"
-    logger.debug(f"Publishing: {topic}")
+    logger.debug("Publishing: %s", topic)
     mqtt_client.publish(
         topic,
         json.dumps(data),
@@ -83,6 +83,11 @@ async def main(mqtt_client: mqtt.Client):
     async for found_data in RuuviTagSensor.get_data_async():
         mac, data = found_data
         sensor_id = mac.lower().replace(":", "")
+        if logger.isEnabledFor(logging.DEBUG):
+            debug_data = ", ".join(
+                [f"{k}={data[k]}" for k in SENSORS]
+            )
+            logger.debug("Received from %s: %s", sensor_id, debug_data)
         if sensor_id not in discovered_sensors:
             publish_discovery(sensor_id, mqtt_client)
             discovered_sensors.add(sensor_id)
@@ -105,6 +110,8 @@ if __name__ == "__main__":
 
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE)
+    if config.getboolean("general", "debug", fallback=False):
+        logger.setLevel(logging.DEBUG)
     host = config["mqtt"]["host"]
     port = config["mqtt"].getint("port")
     mqtt_client = mqtt.Client(
