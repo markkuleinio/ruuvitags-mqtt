@@ -26,6 +26,14 @@ last_updated = {}
 logger = logging.getLogger("ruuvitags-mqtt")
 
 
+def on_connect(client, *args):
+    logger.info("Connected to %s:%d", client.host, client.port)
+
+
+def on_connect_fail(client, *args):
+    logger.error("Failed to connect to %s:%d", client.host, client.port)
+
+
 def publish_discovery(sensor_id: str, mqtt_client: mqtt.Client) -> None:
     device_id = f"ruuvi_{sensor_id}"
     components = {}
@@ -119,9 +127,10 @@ if __name__ == "__main__":
         client_id="ruuvitags-mqtt",
     )
     mqtt_client.username_pw_set(config["mqtt"]["user"], config["mqtt"]["password"])
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_connect_fail = on_connect_fail
     mqtt_client.connect_async(host, port)
     mqtt_client.loop_start()
-    logger.info("Connected to %s:%d", host, port)
     try:
         asyncio.run(main(mqtt_client))
     except KeyboardInterrupt:
