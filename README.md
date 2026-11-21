@@ -1,5 +1,10 @@
 # ruuvitags-mqtt
 
+The app receives the Bluetooth messages from RuuviTags with the built-in
+Bluetooth adapter of Raspberry Pi and sends them to the MQTT broker as messages
+that Home Assistant can use for device discovery and data values.
+
+Tested with `paho-mqtt` 2.1.0 and `ruuvitag-sensor` 4.1.0.
 
 ## Install instructions
 
